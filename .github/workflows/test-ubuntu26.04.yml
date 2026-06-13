@@ -1,0 +1,104 @@
+name: test ubuntu 26.04 sound devices
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 2) Ubuntu 26.04
+          - name: ubuntu-26.04-x64
+            runs_on: ubuntu-26.04
+            # Only one of the following containers can be non-empty
+            job_container: ""           # Job-level docker container
+            step_container: ""          # Step-level docker container
+            shell: bash
+            arch: amd64
+            prefix: /usr
+
+          # 3) Ubuntu 26.04 ARM64
+          - name: ubuntu-26.04-arm64
+            runs_on: ubuntu-26.04-arm
+            # Only one of the following containers can be non-empty
+            job_container: ""           # Job-level docker container
+            step_container: ""          # Step-level docker container
+            shell: bash
+            arch: arm64
+            prefix: /usr
+
+          # 9) Ubuntu 22.04
+          - name: ubuntu-22.04-x64
+            runs_on: ubuntu-22.04
+            # Only one of the following containers can be non-empty
+            job_container: ""  # Job-level docker container
+            step_container: "" # Step-level docker container
+            shell: bash
+            arch: amd64
+            prefix: /usr
+
+          # 10) Ubuntu 22.04 ARM64
+          - name: ubuntu-22.04-arm64
+            runs_on: ubuntu-22.04-arm
+            # Only one of the following containers can be non-empty
+            job_container: ""  # Job-level docker container
+            step_container: "" # Step-level docker container
+            shell: bash
+            arch: arm64
+            prefix: /usr
+
+
+    runs-on: ${{ matrix.runs_on }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    env:
+      D: ${{ matrix.step_container != '' && 'docker exec build_env' || '' }}
+      DEBIAN_FRONTEND: noninteractive
+
+    # Set container for whole job only if it's needed
+    container: ${{ matrix.job_container != '' && matrix.job_container || null }}
+
+    steps:
+      - name: Set up step container for Linux ARMHF builds
+        if: matrix.step_container != ''
+        run: |
+          set -eux
+          docker create --name build_env --platform ${{ matrix.docker_platform }} -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --env DEBIAN_FRONTEND=noninteractive ${{ matrix.step_container }} sleep 99999
+          docker start build_env
+          hostarch=$($D uname -m)
+          # Modify uname output for configure scripts
+          $D mv /usr/bin/uname /usr/bin/uname.orig
+          cat <<EOF >uname-wrapper.sh
+          #!/bin/sh
+          /usr/bin/uname.orig "\$@" | sed -e s/$hostarch/${{ matrix.uname_m }}/
+          EOF
+          docker cp uname-wrapper.sh build_env:/usr/bin/uname
+          $D chown root:root /usr/bin/uname
+          $D chmod +x /usr/bin/uname
+          $D ls -l /usr/bin/uname
+          $D cat /usr/bin/uname
+          $D uname -a
+          rm uname-wrapper.sh
+
+      - name: Install sudo for container builds (Linux)
+        if: matrix.job_container != '' || matrix.step_container != ''
+        run: |
+          set -eux
+          $D apt-get update
+          $D apt-get install -y sudo
+
+      - name: Check
+        run: |
+          set -eux
+          sudo apt-get -y update
+          sudo apt-get -y install alsa-utils
+          aplay -l
