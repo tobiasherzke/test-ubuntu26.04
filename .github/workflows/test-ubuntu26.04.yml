@@ -136,6 +136,10 @@ jobs:
           mkdir -p "$XDG_RUNTIME_DIR"
           chmod 700 "$XDG_RUNTIME_DIR"
 
+          unzip openmha-zip-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
+          unzip openmha-4.18.1-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
+          sudo apt-get -y install ./openmha-packages/*.deb
+
           dbus-run-session -- bash -lc '
             pulseaudio --kill || true
             pulseaudio --start --daemonize=yes --exit-idle-time=-1
@@ -149,9 +153,6 @@ jobs:
           '
           sleep 5
           sudo jack_lsp -A
-          unzip openmha-zip-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
-          unzip openmha-4.18.1-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
-          sudo apt-get -y install ./openmha-packages/*.deb
           sudo mha iolib=MHAIOPortAudio "?" cmd=quit
 
 
