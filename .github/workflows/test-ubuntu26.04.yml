@@ -23,6 +23,8 @@ jobs:
             shell: bash
             arch: amd64
             prefix: /usr
+            year: 26
+            ziparch: x64
 
           # 3) Ubuntu 26.04 ARM64
           - name: ubuntu-26.04-arm64
@@ -33,6 +35,8 @@ jobs:
             shell: bash
             arch: arm64
             prefix: /usr
+            year: 26
+            ziparch: arm64
 
           # 9) Ubuntu 22.04
           - name: ubuntu-22.04-x64
@@ -43,6 +47,8 @@ jobs:
             shell: bash
             arch: amd64
             prefix: /usr
+            year: 22
+            ziparch: x64
 
           # 10) Ubuntu 22.04 ARM64
           - name: ubuntu-22.04-arm64
@@ -53,6 +59,8 @@ jobs:
             shell: bash
             arch: arm64
             prefix: /usr
+            year: 22
+            ziparch: arm64
 
 
     runs-on: ${{ matrix.runs_on }}
@@ -100,5 +108,11 @@ jobs:
         run: |
           set -eux
           sudo apt-get -y update
-          sudo apt-get -y install alsa-utils
+          sudo apt-get -y install alsa-utils unzip
           aplay -l
+          unzip openmha-zip-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
+          unzip openmha-4.18.1-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
+          sudo apt-get -y install ./openmha-packages/*.deb
+          mha iolib=MHAIOPortAudio "?" cmd=quit
+
+
