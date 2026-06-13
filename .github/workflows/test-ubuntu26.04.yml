@@ -111,7 +111,7 @@ jobs:
         run: |
           set -eux
           sudo apt-get -y update
-          sudo apt-get -y install alsa-utils unzip jackd2
+          sudo apt-get -y install alsa-utils unzip jackd2 jack-tools pulseaudio-utils dbus-x11
           cat >"$RUNNER_TEMP/asound.conf" <<'EOF'
           pcm.!default {
             type null
@@ -131,6 +131,22 @@ jobs:
           # Start a local JACK server so PortAudio can initialize its JACK host API
           export JACK_NO_AUDIO_RESERVATION=1
           sudo jackd -d dummy >/tmp/jackd.log 2>&1 &
+          # Start a user session bus and then a PulseAudio-compatible server
+          export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/xdg-runtime-$UID}"
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+
+          dbus-run-session -- bash -lc '
+            pulseaudio --kill || true
+            pulseaudio --start --daemonize=yes --exit-idle-time=-1
+      
+            echo "=== PulseAudio probe ==="
+            pactl info
+            pactl list short sinks || true
+      
+            echo "=== MHA probe ==="
+            mha iolib=MHAIOPortAudio "?" cmd=quit
+          '
           sleep 5
           sudo jack_lsp -A
           unzip openmha-zip-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
