@@ -111,7 +111,7 @@ jobs:
         run: |
           set -eux
           sudo apt-get -y update
-          sudo apt-get -y install alsa-utils unzip jackd2 jack-tools pulseaudio-utils dbus-x11
+          sudo apt-get -y install alsa-utils unzip jackd2 jack-tools pulseaudio pulseaudio-utils dbus-x11
           cat >"$RUNNER_TEMP/asound.conf" <<'EOF'
           pcm.!default {
             type null
