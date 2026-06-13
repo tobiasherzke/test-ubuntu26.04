@@ -104,6 +104,9 @@ jobs:
           $D apt-get update
           $D apt-get install -y sudo
 
+      - name: Checkout git repository
+        uses: actions/checkout@v6
+
       - name: Check
         run: |
           set -eux
