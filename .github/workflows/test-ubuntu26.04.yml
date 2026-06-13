@@ -112,6 +112,21 @@ jobs:
           set -eux
           sudo apt-get -y update
           sudo apt-get -y install alsa-utils unzip
+          cat >"$RUNNER_TEMP/asound.conf" <<'EOF'
+          pcm.!default {
+            type null
+          }
+          pcm.sysdefault {
+            type null
+          }
+          pcm.dmix {
+            type null
+          }
+          ctl.!default {
+            type null
+          }
+          EOF
+          export ALSA_CONFIG_PATH="$RUNNER_TEMP/asound.conf"
           aplay -l
           unzip openmha-zip-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
           unzip openmha-4.18.1-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
