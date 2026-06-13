@@ -130,12 +130,12 @@ jobs:
           aplay -l
           # Start a local JACK server so PortAudio can initialize its JACK host API
           export JACK_NO_AUDIO_RESERVATION=1
-          jackd -d dummy >/tmp/jackd.log 2>&1 &
+          sudo jackd -d dummy >/tmp/jackd.log 2>&1 &
           sleep 5
-          jack_lsp -A
+          sudo jack_lsp -A
           unzip openmha-zip-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
           unzip openmha-4.18.1-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
           sudo apt-get -y install ./openmha-packages/*.deb
-          mha iolib=MHAIOPortAudio "?" cmd=quit
+          sudo mha iolib=MHAIOPortAudio "?" cmd=quit
 
 
