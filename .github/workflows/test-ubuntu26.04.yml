@@ -111,24 +111,11 @@ jobs:
         run: |
           set -eux
           sudo apt-get -y update
-          sudo apt-get -y install unzip pulseaudio dbus-x11
+          sudo apt-get -y install unzip pulseaudio
           unzip openmha-zip-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
           unzip openmha-4.18.1-ubuntu-${{ matrix.year }}*${{ matrix.ziparch }}.zip
           sudo apt-get -y install ./openmha-packages/*.deb
-          # Start a user session bus and then a PulseAudio-compatible server
-          export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/xdg-runtime-$UID}"
-          mkdir -p "$XDG_RUNTIME_DIR"
-          chmod 700 "$XDG_RUNTIME_DIR"
 
-
-          dbus-run-session -- bash -lc '
-            pulseaudio --kill || true
-            pulseaudio --start --daemonize=yes --exit-idle-time=-1
-      
-            echo "=== PulseAudio probe ==="
-            pactl info
-            pactl list short sinks || true
-      
-            echo "=== MHA probe ==="
-            mha iolib=MHAIOPortAudio cmd=quit; echo exit code $?
-          '
+          pulseaudio --kill || true
+          pulseaudio --daemonize=yes --exit-idle-time=-1 || true
+          mha iolib=MHAIOPortAudio cmd=quit; echo exit code $?
